@@ -187,10 +187,8 @@ def main(
 
     model_fn = params.get('model_fn', model_type)
     model = MODEL_FACTORY[model_fn](params).to(device)
-    model._associate_language(smiles_language)
     model._associate_language(protein_language)
 
-    smiles_language.save_pretrained(model_dir)
     protein_language.save(os.path.join(model_dir, 'protein_language.pkl'))
 
     # Define optimizer
