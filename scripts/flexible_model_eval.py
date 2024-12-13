@@ -89,103 +89,42 @@ def main(
         sanitize=params.get('sanitize', False)
     )
     if params.get('receptor_embedding', 'learned') == 'predefined':
-        protein_language = ProteinFeatureLanguage.load(
-            os.path.join(model_path, 'protein_language.pkl')
+        custom_vocab_path = os.path.join("data", "train_vocab.txt")
+        with open(custom_vocab_path, 'r') as f:
+            vocab = [line.strip() for line in f]
+        
+        protein_language = ProteinFeatureLanguage(
+            features='blosum',
+            amino_acid_dict=vocab,
+            add_special_tokens=False
         )
     else:
-        protein_language = ProteinLanguage.load(
-            os.path.join(model_path, 'protein_language.pkl')
-        )
+        protein_language = ProteinLanguage()
 
     # Prepare the dataset
     logger.info("Start data preprocessing...")
 
-    # Check if ligand as SMILES or as aa
-    ligand_name, ligand_extension = os.path.splitext(ligand_filepath)
-    if ligand_extension == '.csv':
-        logger.info(
-            'ligand file has extension .csv \n'
-            'Please make sure ligand is provided as amino acid sequence.'
-        )
-        test_dataset = ProteinProteinInteractionDataset(
-            sequence_filepaths=[[ligand_filepath], [receptor_filepath]],
-            entity_names=['ligand_name', 'sequence_id'],
-            labels_filepath=test_affinity_filepath,
-            annotations_column_names=['label'],
-            protein_languages=protein_language,
-            padding_lengths=[
-                params.get('ligand_padding_length', None),
-                params.get('receptor_padding_length', None)
-            ],
-            paddings=params.get('ligand_padding', True),
-            add_start_and_stops=params.get('add_start_stop_token', True),
-            augment_by_reverts=params.get('augment_test_data', False),
-            randomizes=False,
-            iterate_datasets=True
-        )
-
-        test_loader = torch.utils.data.DataLoader(
-            dataset=test_dataset,
-            batch_size=params['batch_size'],
-            shuffle=True,
-            drop_last=True,
-            num_workers=params.get('num_workers', 0)
-        )
-
-    elif ligand_extension == '.smi':
-        logger.info(
-            'ligand file has extension .smi \n'
-            'Please make sure ligand is provided as SMILES.'
-        )
-
-        test_dataset = DrugAffinityDataset(
-            drug_affinity_filepath=test_affinity_filepath,
-            smi_filepath=ligand_filepath,
-            protein_filepath=receptor_filepath,
-            smiles_language=smiles_language,
-            protein_language=protein_language,
-            smiles_padding=params.get('ligand_padding', True),
-            smiles_padding_length=params.get('ligand_padding_length', None),
-            smiles_add_start_and_stop=params.get(
-                'ligand_add_start_stop', True
-            ),
-            smiles_augment=False,
-            smiles_canonical=params.get('test_smiles_canonical', False),
-            smiles_kekulize=params.get('smiles_kekulize', False),
-            smiles_all_bonds_explicit=params.get(
-                'smiles_bonds_explicit', False
-            ),
-            smiles_all_hs_explicit=params.get('smiles_all_hs_explicit', False),
-            smiles_remove_bonddir=params.get('smiles_remove_bonddir', False),
-            smiles_remove_chirality=params.get(
-                'smiles_remove_chirality', False
-            ),
-            smiles_selfies=params.get('selfies', False),
-            protein_amino_acid_dict=params.get(
-                'protein_amino_acid_dict', 'iupac'
-            ),
-            protein_padding=params.get('receptor_padding', True),
-            protein_padding_length=params.get('receptor_padding_length', None),
-            protein_add_start_and_stop=params.get(
-                'receptor_add_start_stop', True
-            ),
-            protein_augment_by_revert=False,
-            drug_affinity_dtype=torch.float,
-            backend='eager',
-            iterate_dataset=True
-        )
-        logger.info(f'Test dataset has {len(test_dataset)} samples.')
-        test_loader = torch.utils.data.DataLoader(
-            dataset=test_dataset,
-            batch_size=params['batch_size'],
-            shuffle=False,
-            drop_last=True,
-            num_workers=params.get('num_workers', 0)
-        )
-        logger.info(
-            f'ligand_vocabulary_size  {smiles_language.number_of_tokens} '
-            f'receptor_vocabulary_size {protein_language.number_of_tokens}.'
-        )
+    test_dataset = ProteinProteinInteractionDataset(
+        sequence_filepaths=[[receptor_filepath]],  # Single sequence input
+        entity_names=['sequence_id'],
+        labels_filepath=test_affinity_filepath,
+        annotations_column_names=['label'],
+        protein_languages=protein_language,
+        padding_lengths=[params.get('receptor_padding_length', None)],
+        paddings=params.get('receptor_padding', True),
+        add_start_and_stops=params.get('receptor_start_stop_token', True),
+        iterate_datasets=True
+    )
+    
+    test_loader = torch.utils.data.DataLoader(
+        dataset=test_dataset,
+        batch_size=params['batch_size'],
+        shuffle=False,
+        drop_last=True,
+        num_workers=params.get('num_workers', 0)
+    )
+    
+    logger.info(f'Test dataset has {len(test_dataset)} samples.')
 
     else:
         raise ValueError(
