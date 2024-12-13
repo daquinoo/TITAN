@@ -1,0 +1,25 @@
+name: Setup Submodules
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Submodules
+        run: |
+          git submodule init
+          git submodule add https://github.com/PaccMann/paccmann_predictor.git paccmann_tcr/paccmann_predictor
+          git submodule update --remote
+          cd paccmann_tcr/paccmann_predictor
+          git checkout 0.0.4
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Add paccmann_predictor submodule" || echo "No changes to commit"
+          git push
