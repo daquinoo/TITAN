@@ -47,8 +47,8 @@ python3 scripts/flexible_training.py \
     "data/train/" \
     "data/train/" \
     "models/titan_multiscale" \
-    "models/titan_multiscale/params_training.json" \
-    "my_training_run" \
+    "params/params_training.json" \
+    "my_training_run" \ #whatever you want to call it
     "bimodal_mca_multiscale"
 ```
 
@@ -78,9 +78,9 @@ python3 scripts/flexible_model_eval.py \
     "data/heldout/" \
     "data/heldout/" \
     "models/titan_multiscale" \
-    "path_to_trained_model_folder" \
+    "path_to_trained_model_folder_in_quotes" \
     "bimodal_mca_multiscale" \
-    "save_name"
+    "save_name" # name of the trained model eval, can probably make it my_training_run_eval make things easier
 ```
 
 ## Evaluate K-NN baseline on cross validation
