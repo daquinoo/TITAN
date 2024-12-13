@@ -1,0 +1,3 @@
+[submodule "paccmann_tcr/paccmann_predictor"]
+url = https://github.com/PaccMann/paccmann_predictor.git
+branch = 0.0.4
