@@ -112,7 +112,7 @@ def main(
     # Replace/modify the existing protein language setup
     if params.get('receptor_embedding', 'learned') == 'predefined':
         # Load custom vocabulary
-        custom_vocab_path = "train_vocab.txt"  # Adjust path as needed
+        custom_vocab_path = os.path.join("data", "train_vocab.txt")  
         with open(custom_vocab_path, 'r') as f:
             vocab = [line.strip() for line in f]
         
