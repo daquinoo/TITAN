@@ -86,29 +86,6 @@ def main(
 
     device = get_device()
     # Load languages
-    smiles_language_filepath = os.path.join(
-        os.sep,
-        *metadata.__file__.split(os.sep)[:-1], 'tokenizer'
-    )
-    smiles_language = SMILESTokenizer.from_pretrained(smiles_language_filepath)
-    smiles_language.set_encoding_transforms(
-        randomize=None,
-        add_start_and_stop=params.get('ligand_start_stop_token', True),
-        padding=params.get('ligand_padding', True),
-        padding_length=params.get('ligand_padding_length', True),
-    )
-    smiles_language.set_smiles_transforms(
-        augment=params.get('augment_smiles', False),
-        canonical=params.get('smiles_canonical', False),
-        kekulize=params.get('smiles_kekulize', False),
-        all_bonds_explicit=params.get('smiles_bonds_explicit', False),
-        all_hs_explicit=params.get('smiles_all_hs_explicit', False),
-        remove_bonddir=params.get('smiles_remove_bonddir', False),
-        remove_chirality=params.get('smiles_remove_chirality', False),
-        selfies=params.get('selfies', False),
-        sanitize=params.get('sanitize', False)
-    )
-
     # Replace/modify the existing protein language setup
     if params.get('receptor_embedding', 'learned') == 'predefined':
         # Load custom vocabulary
@@ -136,12 +113,12 @@ def main(
         )
 
     def process_sequence_file(filepath):
-    sequences = []
-    with open(filepath, 'r') as f:
-        for line in f:
-            seq = line.strip().split()  # Split on whitespace
-            sequences.append(' '.join(seq))  # Join with spaces for processing
-    return sequences
+        sequences = []
+        with open(filepath, 'r') as f:
+            for line in f:
+                seq = line.strip().split()  # Split on whitespace
+                sequences.append(' '.join(seq))  # Join with spaces for processing
+        return sequences
 
     # Update parameters for data format
     params.update({
