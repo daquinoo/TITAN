@@ -46,7 +46,7 @@ python3 scripts/flexible_training.py \
     "data/heldout/labels.txt" \
     "data/train/" \
     "data/train/" \
-    "models/titan_multiscale" \
+    "paccmann_tcr/models/titan_multiscale" \
     "params/params_training.json" \
     "my_training_run" \ #whatever you want to call it
     "bimodal_mca_multiscale"
@@ -77,8 +77,7 @@ python3 scripts/flexible_model_eval.py \
     "data/heldout/labels.txt" \
     "data/heldout/" \
     "data/heldout/" \
-    "models/titan_multiscale" \
-    "path_to_trained_model_folder_in_quotes" \
+    "paccmann_tcr/models/titan_multiscale/my_training_run/weights/" \
     "bimodal_mca_multiscale" \
     "save_name" # name of the trained model eval, can probably make it my_training_run_eval make things easier
 ```
