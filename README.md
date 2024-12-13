@@ -42,14 +42,15 @@ The TITAN model uses the architecture published as 'paccmann_predictor' [package
 
 ```console
 python3 scripts/flexible_training.py \
-name_of_training_data_files.csv \
-name_of_testing_data_files.csv \
-path_to_tcr_file.csv \
-path_to_epitope_file.csv/.smi \
+data/train/labels.txt \ #positive
+data/heldout/labels.txt \ #negative
+data/train \
+data/train \
+models/titan_multiscale \
 path_to_store_trained_model \
-path_to_parameter_file \
+path_to_parameter_file \ # params_training.json 
 training_name \
-bimodal_mca
+bimodal_mca_multiscale
 ```
 
 ## Finetune an existing TITAN model
@@ -78,7 +79,7 @@ name_of_test_data_file.csv \
 path_to_tcr_file.csv \
 path_to_epitope_file.smi \
 path_to_trained_model_folder \
-bimodal_mca \
+bimodal_mca_multiscale \
 save_name
 ```
 
