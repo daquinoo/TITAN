@@ -70,24 +70,6 @@ def main(
 
     # Load languages
 
-    smiles_language = SMILESTokenizer.from_pretrained(model_path)
-    smiles_language.set_encoding_transforms(
-        randomize=None,
-        add_start_and_stop=params.get('ligand_start_stop_token', True),
-        padding=params.get('ligand_padding', True),
-        padding_length=params.get('ligand_padding_length', True),
-    )
-    smiles_language.set_smiles_transforms(
-        augment=False,
-        canonical=params.get('smiles_canonical', False),
-        kekulize=params.get('smiles_kekulize', False),
-        all_bonds_explicit=params.get('smiles_bonds_explicit', False),
-        all_hs_explicit=params.get('smiles_all_hs_explicit', False),
-        remove_bonddir=params.get('smiles_remove_bonddir', False),
-        remove_chirality=params.get('smiles_remove_chirality', False),
-        selfies=params.get('selfies', False),
-        sanitize=params.get('sanitize', False)
-    )
     if params.get('receptor_embedding', 'learned') == 'predefined':
         custom_vocab_path = os.path.join("data", "train_vocab.txt")
         with open(custom_vocab_path, 'r') as f:
@@ -126,20 +108,12 @@ def main(
     
     logger.info(f'Test dataset has {len(test_dataset)} samples.')
 
-    else:
-        raise ValueError(
-            f"Choose ligand_filepath with extension .csv or .smi, \
-        given was {ligand_extension}"
-        )
-    logger.info(f'Test dataset has {len(test_dataset)} samples.')
-
     model_fn = params.get('model_fn', model_type)
     model = MODEL_FACTORY[model_fn](params).to(device)
-    model._associate_language(smiles_language)
     model._associate_language(protein_language)
 
     model_file = os.path.join(
-        model_path, 'weights', 'best_ROC-AUC_bimodal_mca_multiscale.pt'
+        model_path, 'weights', 'best_ROC-AUC_{model_type}.pt'
     )
 
     logger.info(f'looking for model in {model_file}')
