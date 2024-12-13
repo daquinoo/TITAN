@@ -42,15 +42,14 @@ The TITAN model uses the architecture published as 'paccmann_predictor' [package
 
 ```console
 python3 scripts/flexible_training.py \
-data/train/labels.txt \ #positive
-data/heldout/labels.txt \ #negative
-data/train \
-data/train \
-models/titan_multiscale \
-path_to_store_trained_model \
-path_to_parameter_file \ # params_training.json 
-training_name \
-bimodal_mca_multiscale
+    "data/train/labels.txt" \
+    "data/heldout/labels.txt" \
+    "data/train/" \
+    "data/train/" \
+    "models/titan_multiscale" \
+    "models/titan_multiscale/params_training.json" \
+    "my_training_run" \
+    "bimodal_mca_multiscale"
 ```
 
 ## Finetune an existing TITAN model
@@ -75,13 +74,13 @@ A trained model is provided in trained_model. The model is pretrained on Binding
 
 ```console
 python3 scripts/flexible_model_eval.py \
-data/heldout/labels.txt \
-data/heldout/ \
-data/heldout/ \
-models/titan_multiscale \
-path_to_trained_model_folder \
-bimodal_mca_multiscale \
-save_name
+    "data/heldout/labels.txt" \
+    "data/heldout/" \
+    "data/heldout/" \
+    "models/titan_multiscale" \
+    "path_to_trained_model_folder" \
+    "bimodal_mca_multiscale" \
+    "save_name"
 ```
 
 ## Evaluate K-NN baseline on cross validation
