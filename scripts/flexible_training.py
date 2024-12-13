@@ -109,9 +109,17 @@ def main(
         sanitize=params.get('sanitize', False)
     )
 
+    # Replace/modify the existing protein language setup
     if params.get('receptor_embedding', 'learned') == 'predefined':
+        # Load custom vocabulary
+        custom_vocab_path = "train_vocab.txt"  # Adjust path as needed
+        with open(custom_vocab_path, 'r') as f:
+            vocab = [line.strip() for line in f]
+        
         protein_language = ProteinFeatureLanguage(
-            features=params.get('predefined_embedding', 'blosum')
+            features='blosum',
+            amino_acid_dict=vocab,  # Use custom vocabulary
+            add_special_tokens=False  # Special tokens already in vocab
         )
     else:
         protein_language = ProteinLanguage()
