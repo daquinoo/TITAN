@@ -75,9 +75,10 @@ A trained model is provided in trained_model. The model is pretrained on Binding
 
 ```console
 python3 scripts/flexible_model_eval.py \
-name_of_test_data_file.csv \
-path_to_tcr_file.csv \
-path_to_epitope_file.smi \
+data/heldout/labels.txt \
+data/heldout/ \
+data/heldout/ \
+models/titan_multiscale \
 path_to_trained_model_folder \
 bimodal_mca_multiscale \
 save_name
