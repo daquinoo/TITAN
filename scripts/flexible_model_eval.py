@@ -113,7 +113,7 @@ def main(
     model._associate_language(protein_language)
 
     model_file = os.path.join(
-        model_path, 'weights', 'best_ROC-AUC_{model_type}.pt'
+        model_path, 'weights', f'best_ROC-AUC_{model_type}.pt'
     )
 
     logger.info(f'looking for model in {model_file}')
