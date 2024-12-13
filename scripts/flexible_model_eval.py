@@ -44,7 +44,7 @@ parser.add_argument(
 )
 parser.add_argument(
     'model_type', type=str,
-    help='Name model type you want to use: bimodal_mca, context_encoding_mca.'
+    help='Name model type you want to use: bimodal_mca, bimodal_mca_multiscale, context_encoding_mca.'
 )
 parser.add_argument(
     'save_name', type=str,
