@@ -119,7 +119,7 @@ def main(
         protein_language = ProteinFeatureLanguage(
             features='blosum',
             amino_acid_dict=vocab,  # Use custom vocabulary
-            add_special_tokens=False  # Special tokens already in vocab
+            add_special_tokens=False 
         )
     else:
         protein_language = ProteinLanguage()
@@ -135,80 +135,77 @@ def main(
             'one_hot embedding setting, receptor_vocabulary_size used instead.'
         )
 
+    def process_sequence_file(filepath):
+    sequences = []
+    with open(filepath, 'r') as f:
+        for line in f:
+            seq = line.strip().split()  # Split on whitespace
+            sequences.append(' '.join(seq))  # Join with spaces for processing
+    return sequences
+
+    # Update parameters for data format
+    params.update({
+        'receptor_padding': True,
+        'receptor_padding_length': 50,  # Adjust based on  max sequence length
+        'receptor_start_stop_token': True,
+        'receptor_amino_acid_dict': 'custom',  # Mark using custom vocabulary
+        'batch_size': 32,  # Adjust as needed
+        'ligand_as': 'amino acids'
+    })
+
     # Prepare the dataset
     logger.info("Start data preprocessing...")
 
-    # Check if peptide as SMILES or as aa
-    pepname, pep_extension = os.path.splitext(ligand_filepath)
-    if pep_extension == '.csv':
-        logger.info(
-            'Ligand file has extension .csv \n'
-            'Please make sure ligand is provided as amino acid sequence.'
-        )
-        # Assemble datasets
-        train_dataset = ProteinProteinInteractionDataset(
-            sequence_filepaths=[[ligand_filepath], [receptor_filepath]],
-            entity_names=['ligand_name', 'sequence_id'],
-            labels_filepath=train_affinity_filepath,
-            annotations_column_names=['label'],
-            protein_languages=protein_language,
-            padding_lengths=[
-                params.get('ligand_padding_length', None),
-                params.get('receptor_padding_length', None)
-            ],
-            paddings=params.get('ligand_padding', True),
-            add_start_and_stops=params.get('add_start_stop_token', True),
-            augment_by_reverts=params.get('augment_protein', False),
-            randomizes=params.get('randomize', False),
-            iterate_datasets=True
-        )
-        
-        train_loader = torch.utils.data.DataLoader(
-            dataset=train_dataset,
-            batch_size=params['batch_size'],
-            shuffle=True,
-            drop_last=True,
-            num_workers=params.get('num_workers', 0)
-        )
-
-        test_dataset = ProteinProteinInteractionDataset(
-            sequence_filepaths=[[ligand_filepath], [receptor_filepath]],
-            entity_names=['ligand_name', 'sequence_id'],
-            labels_filepath=test_affinity_filepath,
-            annotations_column_names=['label'],
-            protein_languages=protein_language,
-            padding_lengths=[
-                params.get('ligand_padding_length', None),
-                params.get('receptor_padding_length', None)
-            ],
-            paddings=params.get('ligand_padding', True),
-            add_start_and_stops=params.get('add_start_stop_token', True),
-            augment_by_reverts=params.get('augment_test_data', False),
-            randomizes=False,
-            iterate_datasets=True
-        )
-
-        test_loader = torch.utils.data.DataLoader(
-            dataset=test_dataset,
-            batch_size=params['batch_size'],
-            shuffle=True,
-            drop_last=True,
-            num_workers=params.get('num_workers', 0)
-        )
-        params.update({
-            'ligand_vocabulary_size': protein_language.number_of_tokens,
-            'receptor_vocabulary_size': protein_language.number_of_tokens,
-            'ligand_as': 'amino acids'
-        })  # yapf: disable
-        logger.info(
-            f'ligand_vocabulary_size {protein_language.number_of_tokens}, '
-            f'receptor_vocabulary_size {protein_language.number_of_tokens}'
-        )
-        logger.info(
-            f'Training dataset has {len(train_dataset)} samples, test set has '
-            f'{len(test_dataset)}.'
-        )
-
+    # Assemble datasets
+    train_dataset = ProteinProteinInteractionDataset(
+        sequence_filepaths=[[receptor_filepath]],  # Single sequence input
+        entity_names=['sequence_id'],
+        labels_filepath=train_affinity_filepath,
+        annotations_column_names=['label'],
+        protein_languages=protein_language,
+        padding_lengths=[params.get('receptor_padding_length', None)],
+        paddings=params.get('receptor_padding', True),
+        add_start_and_stops=params.get('receptor_start_stop_token', True),
+        iterate_datasets=True
+    )
+    
+    train_loader = torch.utils.data.DataLoader(
+        dataset=train_dataset,
+        batch_size=params['batch_size'],
+        shuffle=True,
+        drop_last=True,
+        num_workers=params.get('num_workers', 0)
+    )
+    
+    test_dataset = ProteinProteinInteractionDataset(
+        sequence_filepaths=[[receptor_filepath]],
+        entity_names=['sequence_id'],
+        labels_filepath=test_affinity_filepath,
+        annotations_column_names=['label'],
+        protein_languages=protein_language,
+        padding_lengths=[params.get('receptor_padding_length', None)],
+        paddings=params.get('receptor_padding', True),
+        add_start_and_stops=params.get('receptor_start_stop_token', True),
+        iterate_datasets=True
+    )
+    
+    test_loader = torch.utils.data.DataLoader(
+        dataset=test_dataset,
+        batch_size=params['batch_size'],
+        shuffle=True,
+        drop_last=True,
+        num_workers=params.get('num_workers', 0)
+    )
+    
+    params.update({
+        'receptor_vocabulary_size': protein_language.number_of_tokens,
+        'ligand_vocabulary_size': protein_language.number_of_tokens  # Same as receptor since both are proteins
+    })
+    
+    logger.info(
+        f'Training dataset has {len(train_dataset)} samples, test set has '
+        f'{len(test_dataset)}.'
+    )
     elif pep_extension == '.smi':
         logger.info(
             'Ligand file has extension .smi \n'
