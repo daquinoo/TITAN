@@ -3,5 +3,6 @@ from .titan_multiscale import TITANMultiScale
 
 # More models could follow
 MODEL_FACTORY = {
-    'knn': knn
+    'knn': knn,
+    'bimodal_mca_multiscale': TITANMultiScale,
 }
