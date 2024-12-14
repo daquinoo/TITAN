@@ -25,7 +25,10 @@ def trim_filepaths(*filepaths):
     return [filepath.strip() for filepath in filepaths]
 
 def preprocess_to_tab_delimited(filepath):
-    """Convert a CSV file to tab-delimited format."""
+    """Convert a CSV file to tab-delimited format if necessary."""
+    if filepath.endswith('.smi'):  # Skip if already in .smi format
+        print(f"File already in .smi format: {filepath}")
+        return filepath
     try:
         df = pd.read_csv(filepath, sep='\t', header=None)  # Ensure tab-delimited format
         tab_filepath = filepath.replace('.csv', '.smi')   # Change to .smi extension
