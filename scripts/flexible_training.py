@@ -23,6 +23,8 @@ from sklearn.metrics import (
 )
 from pytoda.smiles import metadata
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 torch.manual_seed(123456)
 
 # setup logging
