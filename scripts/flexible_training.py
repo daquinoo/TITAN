@@ -127,17 +127,15 @@ def main(
 
     device = get_device()
     # Load languages
-    # Replace/modify the existing protein language setup
     if params.get('receptor_embedding', 'learned') == 'predefined':
         # Load custom vocabulary
-        custom_vocab_path = os.path.join("data", "train_vocab.txt")  
+        custom_vocab_path = os.path.join("data", "train_vocab.txt")
         with open(custom_vocab_path, 'r') as f:
             vocab = [line.strip() for line in f]
-        
-        protein_language = ProteinFeatureLanguage(
-            features='blosum'
-        )
-        protein_language.add_vocabulary(vocab)
+    
+        protein_language = ProteinFeatureLanguage(features='blosum')
+        for sequence in vocab:
+            protein_language.add_sequence(sequence)
     else:
         protein_language = ProteinLanguage()
 
