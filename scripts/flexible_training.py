@@ -385,6 +385,19 @@ def main(
 if __name__ == '__main__':
     # parse arguments
     args = parser.parse_args()
+
+    (
+        tcr_train_filepath, tcr_test_filepath, 
+        epi_train_filepath, epi_test_filepath, 
+        negative_samples_filepath, model_path, 
+        params_filepath, training_name, model_type
+    ) = trim_filepaths(
+        args.tcr_train_filepath, args.tcr_test_filepath,
+        args.epi_train_filepath, args.epi_test_filepath,
+        args.negative_samples_filepath, args.model_path,
+        args.params_filepath, args.training_name, args.model_type
+    )
+    
     # run the training
     main(
         args.tcr_train_filepath, args.tcr_test_filepath,
