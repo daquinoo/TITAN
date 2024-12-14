@@ -131,7 +131,19 @@ def main(
     
     params_filepath = params_filepath.strip()
     print(f"Resolved Params filepath: '{params_filepath}'")
-    
+    tcr_train_filepath = tcr_train_filepath.strip()
+    tcr_test_filepath = tcr_test_filepath.strip()
+    epi_train_filepath = epi_train_filepath.strip()
+    epi_test_filepath = epi_test_filepath.strip()
+    negative_samples_filepath = negative_samples_filepath.strip()
+    model_path = model_path.strip()
+    print(f"TCR Train Filepath: '{tcr_train_filepath}'")
+    print(f"TCR Test Filepath: '{tcr_test_filepath}'")
+    print(f"EPI Train Filepath: '{epi_train_filepath}'")
+    print(f"EPI Test Filepath: '{epi_test_filepath}'")
+    print(f"Negative Samples Filepath: '{negative_samples_filepath}'")
+
+
     # Process parameter file:
     params = {}
     with open(params_filepath) as fp:
@@ -143,7 +155,7 @@ def main(
     os.makedirs(os.path.join(model_dir, 'results'), exist_ok=True)
     with open(os.path.join(model_dir, 'model_params.json'), 'w') as fp:
         json.dump(params, fp, indent=4)
-
+    
     device = get_device()
     # Load languages
     if params.get('receptor_embedding', 'learned') == 'predefined':
