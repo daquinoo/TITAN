@@ -129,8 +129,7 @@ def main(
             vocab = [line.strip() for line in f]
         
         protein_language = ProteinFeatureLanguage(
-            features='blosum',
-            add_special_tokens=False 
+            features='blosum'
         )
         protein_language.add_vocabulary(vocab)
     else:
