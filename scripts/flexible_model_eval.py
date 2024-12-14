@@ -24,6 +24,20 @@ def trim_filepaths(*filepaths):
     """Trim whitespace from file paths."""
     return [filepath.strip() for filepath in filepaths]
 
+def preprocess_to_tab_delimited(filepath):
+    """Convert a CSV file to tab-delimited format if necessary."""
+    with open(filepath, 'r') as file:
+        content = file.read()
+
+    if ',' in content:
+        # Convert to tab-separated values
+        df = pd.read_csv(filepath)
+        tab_filepath = filepath.replace('.csv', '_tab.csv')
+        df.to_csv(tab_filepath, sep='\t', index=False, header=False)
+        print(f"Converted {filepath} to tab-delimited format: {tab_filepath}")
+        return tab_filepath
+    return filepath
+
 torch.manual_seed(123456)
 
 # setup logging
@@ -121,6 +135,10 @@ def main(
     test_epitopes, test_tcrs, test_labels = read_split_data(
         tcr_test_filepath, epi_test_filepath, negative_samples_filepath
     )
+
+    test_epitopes = preprocess_to_tab_delimited(test_epitopes)
+    test_tcrs = preprocess_to_tab_delimited(test_tcrs)
+    test_labels = preprocess_to_tab_delimited(test_labels)
     
     test_dataset = ProteinProteinInteractionDataset(
         sequence_filepaths=[[test_epitopes], [test_tcrs]],
