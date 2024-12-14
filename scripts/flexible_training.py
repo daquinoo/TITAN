@@ -23,8 +23,7 @@ from sklearn.metrics import (
 )
 from pytoda.smiles import metadata
 
-# Set working directory to the parent directory of the script's directory
-os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+print(f"Current working directory set to: {os.getcwd()}")
 
 torch.manual_seed(123456)
 
@@ -110,6 +109,10 @@ def main(
 
     logger = logging.getLogger(f'{training_name}')
     logger.setLevel(logging.DEBUG)
+    
+    params_filepath = params_filepath.strip()
+    print(f"Resolved Params filepath: '{params_filepath}'")
+    
     # Process parameter file:
     params = {}
     with open(params_filepath) as fp:
