@@ -35,11 +35,11 @@ def preprocess_to_tab_delimited(filepath):
     if ',' in content:
         # Convert to tab-separated values
         df = pd.read_csv(filepath)
-        tab_filepath = filepath.replace('.csv', '_tab.csv')
+        tab_filepath = filepath.replace('.csv', '.smi')  # Change to .smi extension
         df.to_csv(tab_filepath, sep='\t', index=False, header=False)
         print(f"Converted {filepath} to tab-delimited format: {tab_filepath}")
         return tab_filepath
-    return filepath
+    return filepath.replace('.csv', '.smi')  # Rename to .smi if no conversion needed
 
 print(f"Current working directory set to: {os.getcwd()}")
 
