@@ -98,7 +98,6 @@ def main(
     device = get_device()
 
     # Load languages
-
     if params.get('receptor_embedding', 'learned') == 'predefined':
         custom_vocab_path = os.path.join("data", "train_vocab.txt")
         with open(custom_vocab_path, 'r') as f:
