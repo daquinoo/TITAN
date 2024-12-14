@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import sys
+import pandas as pd
 
 import numpy as np
 import torch
@@ -52,6 +53,18 @@ parser.add_argument(
 )
 # yapf: enable
 
+def read_split_data(filepath):
+    df = pd.read_csv(filepath, sep='\t', header=None, 
+                    names=['epitope', 'tcr', 'label'])
+    epitopes_file = filepath.replace('.csv', '_epitopes.csv')
+    tcrs_file = filepath.replace('.csv', '_tcrs.csv')
+    labels_file = filepath.replace('.csv', '_labels.csv')
+    
+    df['epitope'].to_csv(epitopes_file, index=False, header=False)
+    df['tcr'].to_csv(tcrs_file, index=False, header=False)
+    df[['label']].to_csv(labels_file, index=False, header=False)
+    
+    return epitopes_file, tcrs_file, labels_file
 
 def main(
     test_affinity_filepath, receptor_filepath, ligand_filepath, model_path,
@@ -86,10 +99,13 @@ def main(
     # Prepare the dataset
     logger.info("Start data preprocessing...")
 
+    # Process test data
+    test_epitopes, test_tcrs, test_labels = read_split_data(test_affinity_filepath)
+    
     test_dataset = ProteinProteinInteractionDataset(
-        sequence_filepaths=[[receptor_filepath]],  # Single sequence input
-        entity_names=['sequence_id'],
-        labels_filepath=test_affinity_filepath,
+        sequence_filepaths=[[test_epitopes], [test_tcrs]],
+        entity_names=['epitope', 'tcr'],
+        labels_filepath=test_labels,
         annotations_column_names=['label'],
         protein_languages=protein_language,
         padding_lengths=[params.get('receptor_padding_length', None)],
