@@ -186,7 +186,9 @@ def main(
         padding_lengths=[params.get('receptor_padding_length', None)],
         paddings=params.get('receptor_padding', True),
         add_start_and_stops=params.get('receptor_start_stop_token', True),
-        iterate_datasets=True
+        iterate_datasets=True,
+        delimiter='\t',
+        file_format='csv'
     )
     
     train_loader = torch.utils.data.DataLoader(
@@ -206,7 +208,9 @@ def main(
         padding_lengths=[params.get('receptor_padding_length', None)],
         paddings=params.get('receptor_padding', True),
         add_start_and_stops=params.get('receptor_start_stop_token', True),
-        iterate_datasets=True
+        iterate_datasets=True,
+        delimiter='\t',
+        file_format='csv'
     )
     
     test_loader = torch.utils.data.DataLoader(
