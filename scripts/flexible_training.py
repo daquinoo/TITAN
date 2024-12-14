@@ -27,6 +27,20 @@ def trim_filepaths(*filepaths):
     """Trim whitespace from file paths."""
     return [filepath.strip() for filepath in filepaths]
 
+def preprocess_to_tab_delimited(filepath):
+    """Convert a CSV file to tab-delimited format if necessary."""
+    with open(filepath, 'r') as file:
+        content = file.read()
+
+    if ',' in content:
+        # Convert to tab-separated values
+        df = pd.read_csv(filepath)
+        tab_filepath = filepath.replace('.csv', '_tab.csv')
+        df.to_csv(tab_filepath, sep='\t', index=False, header=False)
+        print(f"Converted {filepath} to tab-delimited format: {tab_filepath}")
+        return tab_filepath
+    return filepath
+
 print(f"Current working directory set to: {os.getcwd()}")
 
 torch.manual_seed(123456)
@@ -176,6 +190,14 @@ def main(
         tcr_test_filepath, epi_test_filepath, negative_samples_filepath
     )
 
+    train_epitopes = preprocess_to_tab_delimited(train_epitopes)
+    train_tcrs = preprocess_to_tab_delimited(train_tcrs)
+    train_labels = preprocess_to_tab_delimited(train_labels)
+    
+    test_epitopes = preprocess_to_tab_delimited(test_epitopes)
+    test_tcrs = preprocess_to_tab_delimited(test_tcrs)
+    test_labels = preprocess_to_tab_delimited(test_labels)
+    
     # Assemble datasets
     train_dataset = ProteinProteinInteractionDataset(
         sequence_filepaths=[[train_epitopes], [train_tcrs]],
@@ -187,8 +209,6 @@ def main(
         paddings=params.get('receptor_padding', True),
         add_start_and_stops=params.get('receptor_start_stop_token', True),
         iterate_datasets=True,
-        delimiter='\t',
-        file_format='csv'
     )
     
     train_loader = torch.utils.data.DataLoader(
