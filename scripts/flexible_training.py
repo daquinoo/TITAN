@@ -23,6 +23,10 @@ from sklearn.metrics import (
 )
 from pytoda.smiles import metadata
 
+def trim_filepaths(*filepaths):
+    """Trim whitespace from file paths."""
+    return [filepath.strip() for filepath in filepaths]
+
 print(f"Current working directory set to: {os.getcwd()}")
 
 torch.manual_seed(123456)
