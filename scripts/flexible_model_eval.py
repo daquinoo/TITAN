@@ -28,16 +28,16 @@ logging.basicConfig(stream=sys.stdout)
 # yapf: disable
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    'test_affinity_filepath', type=str,
-    help='Path to the affinity data.'
+    'tcr_test_filepath', type=str,
+    help='Path to the TCR test data.'
 )
 parser.add_argument(
-    'receptor_filepath', type=str,
-    help='Path to the receptor aa data. (.csv)'
+    'epi_test_filepath', type=str,
+    help='Path to the epitope test data.'
 )
 parser.add_argument(
-    'ligand_filepath', type=str,
-    help='Path to the ligand data. (SMILES .smi or aa .csv)'
+    'negative_samples_filepath', type=str,
+    help='Path to the negative samples file (TCRrepertoires.csv).'
 )
 parser.add_argument(
     'model_path', type=str,
@@ -53,21 +53,37 @@ parser.add_argument(
 )
 # yapf: enable
 
-def read_split_data(filepath):
-    df = pd.read_csv(filepath, sep='\t', header=None, 
-                    names=['epitope', 'tcr', 'label'])
-    epitopes_file = filepath.replace('.csv', '_epitopes.csv')
-    tcrs_file = filepath.replace('.csv', '_tcrs.csv')
-    labels_file = filepath.replace('.csv', '_labels.csv')
+def read_split_data(tcr_filepath, epi_filepath, negative_samples_path):
+    # Read positive examples from tcr and epi splits
+    tcr_df = pd.read_csv(tcr_filepath, sep='\t', header=None, 
+                        names=['epitope', 'tcr', 'label'])
+    epi_df = pd.read_csv(epi_filepath, sep='\t', header=None,
+                        names=['epitope', 'tcr', 'label'])
     
-    df['epitope'].to_csv(epitopes_file, index=False, header=False)
-    df['tcr'].to_csv(tcrs_file, index=False, header=False)
-    df[['label']].to_csv(labels_file, index=False, header=False)
+    # Merge positive examples
+    positive_df = pd.concat([tcr_df, epi_df]).drop_duplicates()
+    
+    # Read and process negative examples
+    negative_df = pd.read_csv(negative_samples_path, header=None,
+                            names=['epitope', 'tcr', 'label'])
+    negative_df = negative_df[negative_df['label'] == 0]
+    
+    # Combine positive and negative examples
+    combined_df = pd.concat([positive_df, negative_df])
+    
+    # Create temporary files
+    epitopes_file = tcr_filepath.replace('.csv', '_epitopes.csv')
+    tcrs_file = tcr_filepath.replace('.csv', '_tcrs.csv')
+    labels_file = tcr_filepath.replace('.csv', '_labels.csv')
+    
+    combined_df['epitope'].to_csv(epitopes_file, index=False, header=False)
+    combined_df['tcr'].to_csv(tcrs_file, index=False, header=False)
+    combined_df[['label']].to_csv(labels_file, index=False, header=False)
     
     return epitopes_file, tcrs_file, labels_file
-
+    
 def main(
-    test_affinity_filepath, receptor_filepath, ligand_filepath, model_path,
+    tcr_test_filepath, epi_test_filepath, negative_samples_filepath, model_path,
     model_type, save_name
 ):
     logger = logging.getLogger()
@@ -100,7 +116,9 @@ def main(
     logger.info("Start data preprocessing...")
 
     # Process test data
-    test_epitopes, test_tcrs, test_labels = read_split_data(test_affinity_filepath)
+    test_epitopes, test_tcrs, test_labels = read_split_data(
+        tcr_test_filepath, epi_test_filepath, negative_samples_filepath
+    )
     
     test_dataset = ProteinProteinInteractionDataset(
         sequence_filepaths=[[test_epitopes], [test_tcrs]],
@@ -113,6 +131,7 @@ def main(
         add_start_and_stops=params.get('receptor_start_stop_token', True),
         iterate_datasets=True
     )
+
     
     test_loader = torch.utils.data.DataLoader(
         dataset=test_dataset,
@@ -186,6 +205,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # run the training
     main(
-        args.test_affinity_filepath, args.receptor_filepath,
-        args.ligand_filepath, args.model_path, args.model_type, args.save_name
+        args.tcr_test_filepath, args.epi_test_filepath,
+        args.negative_samples_filepath, args.model_path, 
+        args.model_type, args.save_name
     )
