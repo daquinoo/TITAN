@@ -198,7 +198,6 @@ def main(
     test_tcrs = preprocess_to_tab_delimited(test_tcrs)
     test_labels = preprocess_to_tab_delimited(test_labels)
     
-    # Assemble datasets
     train_dataset = ProteinProteinInteractionDataset(
         sequence_filepaths=[[train_epitopes], [train_tcrs]],
         entity_names=['epitope', 'tcr'],
