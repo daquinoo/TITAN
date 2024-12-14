@@ -20,9 +20,6 @@ from sklearn.metrics import (
     auc, average_precision_score, precision_recall_curve, roc_curve
 )
 
-# Set working directory to the parent directory of the script's directory
-os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 torch.manual_seed(123456)
 
 # setup logging
