@@ -42,13 +42,14 @@ The TITAN model uses the architecture published as 'paccmann_predictor' [package
 
 ```console
 python3 scripts/flexible_training.py \
-    "data/train/labels.txt" \
-    "data/heldout/labels.txt" \
-    "data/train/" \
-    "data/train/" \
+    "data/BAP/tcr_split/train.csv" \
+    "data/BAP/tcr_split/test.csv" \
+    "data/BAP/epi_split/train.csv" \
+    "data/BAP/epi_split/test.csv" \
+    "data/embedding/TCRrepertoires.csv" \
     "paccmann_tcr/models/titan_multiscale" \
     "params/params_training.json" \
-    "my_training_run" \ #whatever you want to call it
+    "my_training_run" \  # whatever you want to call the trained model
     "bimodal_mca_multiscale"
 ```
 
@@ -74,12 +75,12 @@ A trained model is provided in trained_model. The model is pretrained on Binding
 
 ```console
 python3 scripts/flexible_model_eval.py \
-    "data/heldout/labels.txt" \
-    "data/heldout/" \
-    "data/heldout/" \
-    "paccmann_tcr/models/titan_multiscale/my_training_run/weights/" \
+    "data/BAP/tcr_split/test.csv" \
+    "data/BAP/epi_split/test.csv" \
+    "data/embedding/TCRrepertoires.csv" \
+    "paccmann_tcr/models/titan_multiscale/my_training_run" \
     "bimodal_mca_multiscale" \
-    "save_name" # name of the trained model eval, can probably make it my_training_run_eval make things easier
+    "my_training_run_eval" #save name, whatever you called the trained model
 ```
 
 ## Evaluate K-NN baseline on cross validation
