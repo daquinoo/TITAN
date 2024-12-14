@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 from time import time
+import pandas as pd
 
 import numpy as np
 import torch
@@ -64,6 +65,18 @@ parser.add_argument(
 
 # yapf: enable
 
+def read_split_data(filepath):
+    df = pd.read_csv(filepath, sep='\t', header=None, 
+                    names=['epitope', 'tcr', 'label'])
+    epitopes_file = filepath.replace('.csv', '_epitopes.csv')
+    tcrs_file = filepath.replace('.csv', '_tcrs.csv')
+    labels_file = filepath.replace('.csv', '_labels.csv')
+    
+    df['epitope'].to_csv(epitopes_file, index=False, header=False)
+    df['tcr'].to_csv(tcrs_file, index=False, header=False)
+    df[['label']].to_csv(labels_file, index=False, header=False)
+    
+    return epitopes_file, tcrs_file, labels_file
 
 def main(
     train_affinity_filepath, test_affinity_filepath, receptor_filepath,
@@ -112,14 +125,6 @@ def main(
             'one_hot embedding setting, receptor_vocabulary_size used instead.'
         )
 
-    def process_sequence_file(filepath):
-        sequences = []
-        with open(filepath, 'r') as f:
-            for line in f:
-                seq = line.strip().split()  # Split on whitespace
-                sequences.append(' '.join(seq))  # Join with spaces for processing
-        return sequences
-
     # Update parameters for data format
     params.update({
         'receptor_padding': True,
@@ -134,10 +139,15 @@ def main(
     logger.info("Start data preprocessing...")
 
     # Assemble datasets
+    # Process training and test data
+    train_epitopes, train_tcrs, train_labels = read_split_data(train_affinity_filepath)
+    test_epitopes, test_tcrs, test_labels = read_split_data(test_affinity_filepath)
+
+    # Assemble datasets
     train_dataset = ProteinProteinInteractionDataset(
-        sequence_filepaths=[[receptor_filepath]],  # Single sequence input
-        entity_names=['sequence_id'],
-        labels_filepath=train_affinity_filepath,
+        sequence_filepaths=[[train_epitopes], [train_tcrs]],
+        entity_names=['epitope', 'tcr'],
+        labels_filepath=train_labels,
         annotations_column_names=['label'],
         protein_languages=protein_language,
         padding_lengths=[params.get('receptor_padding_length', None)],
@@ -155,9 +165,9 @@ def main(
     )
     
     test_dataset = ProteinProteinInteractionDataset(
-        sequence_filepaths=[[receptor_filepath]],
-        entity_names=['sequence_id'],
-        labels_filepath=test_affinity_filepath,
+        sequence_filepaths=[[test_epitopes], [test_tcrs]],
+        entity_names=['epitope', 'tcr'],
+        labels_filepath=test_labels,
         annotations_column_names=['label'],
         protein_languages=protein_language,
         padding_lengths=[params.get('receptor_padding_length', None)],
