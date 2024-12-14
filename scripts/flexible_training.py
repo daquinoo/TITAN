@@ -28,18 +28,16 @@ def trim_filepaths(*filepaths):
     return [filepath.strip() for filepath in filepaths]
 
 def preprocess_to_tab_delimited(filepath):
-    """Convert a CSV file to tab-delimited format if necessary."""
-    with open(filepath, 'r') as file:
-        content = file.read()
-
-    if ',' in content:
-        # Convert to tab-separated values
-        df = pd.read_csv(filepath)
-        tab_filepath = filepath.replace('.csv', '.smi')  # Change to .smi extension
+    """Convert a CSV file to tab-delimited format."""
+    try:
+        df = pd.read_csv(filepath, sep='\t', header=None)  # Ensure tab-delimited format
+        tab_filepath = filepath.replace('.csv', '.smi')   # Change to .smi extension
         df.to_csv(tab_filepath, sep='\t', index=False, header=False)
         print(f"Converted {filepath} to tab-delimited format: {tab_filepath}")
         return tab_filepath
-    return filepath.replace('.csv', '.smi')  # Rename to .smi if no conversion needed
+    except Exception as e:
+        print(f"Error preprocessing {filepath}: {e}")
+        raise
 
 print(f"Current working directory set to: {os.getcwd()}")
 
@@ -91,30 +89,30 @@ parser.add_argument(
 
 def read_split_data(tcr_filepath, epi_filepath, negative_samples_path):
     # Read positive examples from tcr and epi splits
-    tcr_df = pd.read_csv(tcr_filepath, sep='\t', header=None, 
-                        names=['epitope', 'tcr', 'label'])
-    epi_df = pd.read_csv(epi_filepath, sep='\t', header=None,
-                        names=['epitope', 'tcr', 'label'])
+    tcr_df = pd.read_csv(tcr_filepath, sep='\t', header=None, names=['epitope', 'tcr', 'label'])
+    epi_df = pd.read_csv(epi_filepath, sep='\t', header=None, names=['epitope', 'tcr', 'label'])
     
     # Merge positive examples
     positive_df = pd.concat([tcr_df, epi_df]).drop_duplicates()
     
     # Read and process negative examples
-    negative_df = pd.read_csv(negative_samples_path, header=None,
-                            names=['epitope', 'tcr', 'label'])
-    negative_df = negative_df[negative_df['label'] == 0]
+    negative_df = pd.read_csv(negative_samples_path, sep='\t', header=None, names=['epitope', 'tcr', 'label'])
+    negative_df = negative_df[negative_df['label'] == 0]  # Ensure labels are 0 for negatives
     
     # Combine positive and negative examples
     combined_df = pd.concat([positive_df, negative_df])
-    
-    # Create temporary files
+
+    # Generate label file dynamically from combined data
     epitopes_file = tcr_filepath.replace('.csv', '_epitopes.csv')
     tcrs_file = tcr_filepath.replace('.csv', '_tcrs.csv')
     labels_file = tcr_filepath.replace('.csv', '_labels.csv')
     
+    # Save to temporary files for further processing
     combined_df['epitope'].to_csv(epitopes_file, index=False, header=False)
     combined_df['tcr'].to_csv(tcrs_file, index=False, header=False)
-    combined_df[['label']].to_csv(labels_file, index=False, header=False)
+    combined_df['label'].to_csv(labels_file, index=False, header=False)  # Generate labels file
+
+    print(f"Created: {epitopes_file}, {tcrs_file}, {labels_file}")
     
     return epitopes_file, tcrs_file, labels_file
 
@@ -227,9 +225,7 @@ def main(
         padding_lengths=[params.get('receptor_padding_length', None)],
         paddings=params.get('receptor_padding', True),
         add_start_and_stops=params.get('receptor_start_stop_token', True),
-        iterate_datasets=True,
-        delimiter='\t',
-        file_format='csv'
+        iterate_datasets=True
     )
     
     test_loader = torch.utils.data.DataLoader(
