@@ -23,7 +23,8 @@ from sklearn.metrics import (
 )
 from pytoda.smiles import metadata
 
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+# Set working directory to the parent directory of the script's directory
+os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 torch.manual_seed(123456)
 
