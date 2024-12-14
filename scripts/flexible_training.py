@@ -130,9 +130,9 @@ def main(
         
         protein_language = ProteinFeatureLanguage(
             features='blosum',
-            amino_acid_dict=vocab,  # Use custom vocabulary
             add_special_tokens=False 
         )
+        protein_language.add_vocabulary(vocab)
     else:
         protein_language = ProteinLanguage()
 
