@@ -31,20 +31,24 @@ logging.basicConfig(stream=sys.stdout)
 # yapf: disable
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    'train_affinity_filepath', type=str,
-    help='Path to the affinity data.'
+    'tcr_train_filepath', type=str,
+    help='Path to the TCR training data.'
 )
 parser.add_argument(
-    'test_affinity_filepath', type=str,
-    help='Path to the affinity data.'
+    'tcr_test_filepath', type=str,
+    help='Path to the TCR test data.'
 )
 parser.add_argument(
-    'receptor_filepath', type=str,
-    help='Path to the protein aa data. (.csv)'
+    'epi_train_filepath', type=str,
+    help='Path to the epitope training data.'
 )
 parser.add_argument(
-    'ligand_filepath', type=str,
-    help='Path to the peptide data. (SMILES .smi or aa .csv)'
+    'epi_test_filepath', type=str,
+    help='Path to the epitope test data.'
+)
+parser.add_argument(
+    'negative_samples_filepath', type=str,
+    help='Path to the negative samples file (TCRrepertoires.csv).'
 )
 parser.add_argument(
     'model_path', type=str,
@@ -60,27 +64,45 @@ parser.add_argument(
 )
 parser.add_argument(
     'model_type', type=str,
-    help='Name model type you want to use: bimodal_mca, context_encoding_mca.'
+    help='Name model type you want to use: bimodal_mca, bimodal_mca_multiscale.'
 )
 
 # yapf: enable
 
-def read_split_data(filepath):
-    df = pd.read_csv(filepath, sep='\t', header=None, 
-                    names=['epitope', 'tcr', 'label'])
-    epitopes_file = filepath.replace('.csv', '_epitopes.csv')
-    tcrs_file = filepath.replace('.csv', '_tcrs.csv')
-    labels_file = filepath.replace('.csv', '_labels.csv')
+def read_split_data(tcr_filepath, epi_filepath, negative_samples_path):
+    # Read positive examples from tcr and epi splits
+    tcr_df = pd.read_csv(tcr_filepath, sep='\t', header=None, 
+                        names=['epitope', 'tcr', 'label'])
+    epi_df = pd.read_csv(epi_filepath, sep='\t', header=None,
+                        names=['epitope', 'tcr', 'label'])
     
-    df['epitope'].to_csv(epitopes_file, index=False, header=False)
-    df['tcr'].to_csv(tcrs_file, index=False, header=False)
-    df[['label']].to_csv(labels_file, index=False, header=False)
+    # Merge positive examples
+    positive_df = pd.concat([tcr_df, epi_df]).drop_duplicates()
+    
+    # Read and process negative examples
+    negative_df = pd.read_csv(negative_samples_path, header=None,
+                            names=['epitope', 'tcr', 'label'])
+    negative_df = negative_df[negative_df['label'] == 0]
+    
+    # Combine positive and negative examples
+    combined_df = pd.concat([positive_df, negative_df])
+    
+    # Create temporary files
+    epitopes_file = tcr_filepath.replace('.csv', '_epitopes.csv')
+    tcrs_file = tcr_filepath.replace('.csv', '_tcrs.csv')
+    labels_file = tcr_filepath.replace('.csv', '_labels.csv')
+    
+    combined_df['epitope'].to_csv(epitopes_file, index=False, header=False)
+    combined_df['tcr'].to_csv(tcrs_file, index=False, header=False)
+    combined_df[['label']].to_csv(labels_file, index=False, header=False)
     
     return epitopes_file, tcrs_file, labels_file
 
 def main(
-    train_affinity_filepath, test_affinity_filepath, receptor_filepath,
-    ligand_filepath, model_path, params_filepath, training_name, model_type
+    tcr_train_filepath, tcr_test_filepath, 
+    epi_train_filepath, epi_test_filepath,
+    negative_samples_filepath, model_path, 
+    params_filepath, training_name, model_type
 ):
 
     logger = logging.getLogger(f'{training_name}')
@@ -140,8 +162,12 @@ def main(
 
     # Assemble datasets
     # Process training and test data
-    train_epitopes, train_tcrs, train_labels = read_split_data(train_affinity_filepath)
-    test_epitopes, test_tcrs, test_labels = read_split_data(test_affinity_filepath)
+    train_epitopes, train_tcrs, train_labels = read_split_data(
+        tcr_train_filepath, epi_train_filepath, negative_samples_filepath
+    )
+    test_epitopes, test_tcrs, test_labels = read_split_data(
+        tcr_test_filepath, epi_test_filepath, negative_samples_filepath
+    )
 
     # Assemble datasets
     train_dataset = ProteinProteinInteractionDataset(
@@ -354,7 +380,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # run the training
     main(
-        args.train_affinity_filepath, args.test_affinity_filepath,
-        args.receptor_filepath, args.ligand_filepath, args.model_path,
+        args.tcr_train_filepath, args.tcr_test_filepath,
+        args.epi_train_filepath, args.epi_test_filepath,
+        args.negative_samples_filepath, args.model_path,
         args.params_filepath, args.training_name, args.model_type
     )
