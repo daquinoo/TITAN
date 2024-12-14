@@ -25,18 +25,16 @@ def trim_filepaths(*filepaths):
     return [filepath.strip() for filepath in filepaths]
 
 def preprocess_to_tab_delimited(filepath):
-    """Convert a CSV file to tab-delimited format if necessary."""
-    with open(filepath, 'r') as file:
-        content = file.read()
-
-    if ',' in content:
-        # Convert to tab-separated values
-        df = pd.read_csv(filepath)
-        tab_filepath = filepath.replace('.csv', '.smi')  # Change to .smi extension
+    """Convert a CSV file to tab-delimited format."""
+    try:
+        df = pd.read_csv(filepath, sep='\t', header=None)  # Ensure tab-delimited format
+        tab_filepath = filepath.replace('.csv', '.smi')   # Change to .smi extension
         df.to_csv(tab_filepath, sep='\t', index=False, header=False)
         print(f"Converted {filepath} to tab-delimited format: {tab_filepath}")
         return tab_filepath
-    return filepath.replace('.csv', '.smi')  # Rename to .smi if no conversion needed
+    except Exception as e:
+        print(f"Error preprocessing {filepath}: {e}")
+        raise
 
 torch.manual_seed(123456)
 
@@ -227,15 +225,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     (
-        tcr_train_filepath, tcr_test_filepath, 
-        epi_train_filepath, epi_test_filepath, 
+        tcr_test_filepath, epi_test_filepath, 
         negative_samples_filepath, model_path, 
-        params_filepath, training_name, model_type
+        model_type, save_name
     ) = trim_filepaths(
-        args.tcr_train_filepath, args.tcr_test_filepath,
-        args.epi_train_filepath, args.epi_test_filepath,
-        args.negative_samples_filepath, args.model_path,
-        args.params_filepath, args.training_name, args.model_type
+        args.tcr_test_filepath, args.epi_test_filepath,
+        args.negative_samples_filepath, args.model_path, 
+        args.model_type, args.save_name
     )
     
     # run the training
